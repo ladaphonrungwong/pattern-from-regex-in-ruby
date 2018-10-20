@@ -25,13 +25,13 @@ for item in contents
 
     end
 
-    emails_dict["sender_email"] = s_email if s_email
-    emails_dict["sender_name"] = s_name.gsub(/\s*</,"").gsub(/:\s*/, "").gsub(/\"/, "") if s_name
+    emails_dict["sender_email"] = s_email if s_email != ""
+    emails_dict["sender_name"] = s_name.gsub(/\s*</,"").gsub(/:\s*/, "").gsub(/\"/, "") if s_name != ""
 
 
-    #recipient = (item.match /To:.*/).to_s
+    recipient = (item.scan /To:.*/).to_s
 
-    recipient = (item.match /(?<!Reply-)To:.*/).to_s
+    #recipient = (item.match /(?<!Reply-)To:.*/).to_s
 
     #(str =~ /(?<!a)o/).to_s found n_b : o หลัง a negative
 
@@ -41,16 +41,17 @@ for item in contents
         r_email = (recipient.match /\w\S*@.*\w/).to_s
         r_name = (recipient.match /:.*</).to_s
     end
-
-    emails_dict["recipient_email"] = r_email if r_email
-    emails_dict["recipient_name"] = r_name.gsub(/\s*</, "").gsub(/:\s*/, "").gsub(/\"/, "") if r_name
+    puts r_name
+    emails_dict["recipient_email"] = r_email if r_email != ""
+    emails_dict["recipient_name"] = r_name.gsub(/\s*</, "").gsub(/:\s*/, "").gsub(/\"/, "") if r_name != ""
+    #puts r_name.is_a?(String)
 
     date_field = (item.match /Date:.*/).to_s
-    date = (date_field.match /\d+\s\w+\s\d+/).to_s if date_field
-    emails_dict["date_sent"] = date if date
+    date = (date_field.match /\d+\s\w+\s\d+/).to_s if date_field != ""
+    emails_dict["date_sent"] = date if date != ""
 
     subject_field = (item.match /Subject: .*/).to_s
-    emails_dict["subject"] = subject_field.gsub(/Subject: /, "") if subject_field
+    emails_dict["subject"] = subject_field.gsub(/Subject: /, "") if subject_field != ""
 
 
     full_email = item.match /Status:.*/m
@@ -59,23 +60,27 @@ for item in contents
     #scan returns everything that the Regex matches.
     #match returns the first match as a MatchData object
 
-    dollar = full_email.to_s.scan /\w+[$]\w+/m if full_email
+    dollar = (full_email.to_s.scan /\w+[$]\w+/m).to_s if full_email != ""
 
-    emails_dict["dollar"] = dollar if dollar
+    emails_dict["dollar"] = dollar if dollar != ""
 
-    percent = full_email.to_s.scan /\d+[%]/m if full_email
+    percent = (full_email.to_s.scan /\d+[%]/m).to_s if full_email != ""
 
-
-
-    emails_dict["percent"] = percent if percent
+    emails_dict["percent"] = percent if percent != ""
 
     cl_name = []
     for cl in countriesList
-      countries = full_email.to_s.scan /#{cl}/m if full_email
+      #puts cl
+      countries = (full_email.to_s.scan /#{cl}/im) if full_email != ""
+      #ZIMBABWE
+      #countries = full_email.to_s.scan /ZIMBABWE/m if full_email
+      #puts cl_name
+      cl_name += countries if countries  != ""
 
-      cl_name = cl_name + countries if countries
     end
-    emails_dict["countries"] = cl_name if cl_name
+    #puts cl_name
+    cl_name = cl_name.uniq
+    emails_dict["countries"] = cl_name if cl_name != ""
 
 
     #emails_dict["email_body"] = full_email if full_email
@@ -90,7 +95,7 @@ end
 puts("Number of emails: " + (emails.length).to_s)
 puts "\n"
 
-
+#begin
 for index in (0..emails.length-1)
   puts "Email No : " + (index+1).to_s
   for key, value in emails[index]
@@ -98,3 +103,7 @@ for index in (0..emails.length-1)
   end
   puts "\n"
 end
+#=end
+
+# puts ""
+# puts emails.map {|x| x.values[8]}.uniq
